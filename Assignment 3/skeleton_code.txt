@@ -1,0 +1,47 @@
+//Driver class
+import java.util.List;
+
+Public class Driver{
+    private String firstName;
+    private String secondName;
+    private String licenceNumber;
+    private String email;
+    public void updateDetails();
+    public void registerVehicle();
+    public void payInvoice();
+}
+
+//Registration class
+import java.util.List;
+
+Public class Registration{
+    private String licencePlate;
+    private String registrationNumber;
+    private DateTime registrationTime;
+    public void updateRegistrationStatus();
+    public void checkSubmission();
+}
+
+//Admin class
+import java.util.List;
+
+Public class Admin{
+    private String employeeID;
+    private String specialty;
+    public void confirmRegistration();
+    public void denyRegistration();
+    public void contactCustomer();
+}
+
+//Vehicle class
+import java.util.List;
+
+Public class Vehicle{
+    private String licencePlate;
+    private String make;
+    private String model;
+    private DateTime year;
+    private bool isRoadWorthy;
+    public void sendRoadworthyTest();
+    public void decommission(); //changes isRoadWorthy to false
+}
