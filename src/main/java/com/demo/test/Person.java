@@ -43,7 +43,7 @@ public class Person {
                 (!Character.isUpperCase(personID.charAt(8)))) {
             return false;
         }
-        // If it gets this far, return trwd and write to txt file
+        // If it gets this far, return true and write to txt file
         String filePath = "people.txt";
         String newPerson = "" + personID + ", " + firstName + ", " + lastName + ", " + address + ", " + birthDate
                 + "\n";
@@ -63,12 +63,12 @@ public class Person {
             String newLastName,
             String newAddress,
             String newBirthDate) {
-        // Condition 1: If a person is under 18 their address cannotn be changed
+        // Condition 1: If a person is under 18 their address cannot be changed
         // Get year from date
         LocalDate birthdayDate = LocalDate.parse(birthDate);
         int birthYear = birthdayDate.getYear();
 
-        // Calculste current year
+        // Calculate current year
         int currentYear = 2025;
 
         // Check >=18
@@ -101,8 +101,21 @@ public class Person {
         this.lastName=newLastName;
         this.address=newAddress;
         this.birthDate=newBirthDate;
+        
+        //Add the new person with details to the txt file
+        String filePath="people.txt";
+        String updatedPerson=""+firstName+", "+lastName+", "+address+", "+birthDate;
+        
+        try(FileWriter fileWriter=new FileWriter(filePath,true);
+        		BufferedWriter bufferedWriter=new BufferedWriter(fileWriter)){
+        	bufferedWriter.write(updatedPerson);
+        	bufferedWriter.newLine();
+        	System.out.println("Text appended successfully");
+    }
+        catch(IOException e) {
+        	System.err.println("An error occured: "+e.getMessage());
+        }
         return true;
-
     }
 
     public String addDemeritPoints(){
