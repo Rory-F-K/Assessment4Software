@@ -20,7 +20,7 @@ public class Person {
     private boolean isSuspended;
 
     public boolean addPerson() {
-        // condition 1: personID should be eactly 10 characters long,
+        // condition 1: personID should be exactly 10 characters long,
         // and first 2 characters between 2 and 9
         if ((personID.length() != 10) || (personID.charAt(0) < 2) || (personID.charAt(0) > 9)
                 || (personID.charAt(1) < 2) && (personID.charAt(1) > 9)) {
