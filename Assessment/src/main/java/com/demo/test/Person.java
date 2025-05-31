@@ -1,6 +1,12 @@
 package mainClasses;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.Period;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Date;
 import java.io.BufferedWriter;
@@ -20,9 +26,20 @@ public class Person {
     private String lastName;
     private String address;
     private String birthDate;
-    private HashMap<Date, Integer> demeritPoints;
+    private HashMap<Date, List<Integer>> demeritPoints;
     private boolean isSuspended;
+    public Person(){
+        demeritPoints = new HashMap<>();
+    }
 
+    public Person(String personID, String firstName, String lastName, String address, String birthDate) {
+        this.personID = personID;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.address = address;
+        this.birthDate = birthDate;
+        this.demeritPoints = new HashMap<>();
+    }
     //setters and getters
     // personID
     public String getPersonID() {
@@ -70,11 +87,11 @@ public class Person {
     }
 
     // demeritPoints
-    public HashMap<Date, Integer> getDemeritPoints() {
+    public HashMap<Date, List<Integer>> getDemeritPoints() {
         return demeritPoints;
     }
 
-    public void setDemeritPoints(HashMap<Date, Integer> demeritPoints) {
+    public void setDemeritPoints(HashMap<Date, List<Integer>> demeritPoints) {
         this.demeritPoints = demeritPoints;
     }
 
@@ -88,9 +105,14 @@ public class Person {
     }
 
 
+
     public boolean addPerson() {
         // condition 1: personID should be eactly 10 characters long,
         // and first 2 characters between 2 and 9
+        if (personID == null) {
+            return false;
+        }
+
         if ((personID.length() != 10) || (personID.charAt(0) < '2') || (personID.charAt(0) > '9')
                 || (personID.charAt(1) < '2' || personID.charAt(1) > '9')) {
             return false;
@@ -113,16 +135,45 @@ public class Person {
                 (!Character.isUpperCase(personID.charAt(9)))) {
             return false;
         }
+
+        // check against future dates
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        try {
+            LocalDate bd = LocalDate.parse(birthDate, formatter);
+            if (bd.isAfter(LocalDate.now())) {
+                return false;  // birthDate is in the future, reject
+            }
+        } catch (DateTimeParseException e) {
+            return false;  // invalid date format, reject
+        }
+
+        // check if person with this ID exists
+        Path filePath = Paths.get("people.txt");
+        try {
+            if (Files.exists(filePath)) {
+                List<String> lines = Files.readAllLines(filePath);
+                for (String line : lines) {
+                    if (line.startsWith(personID + ",")) {
+                        // Duplicate ID found, reject add
+                        return false;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            // Handle read error if needed
+            return false;
+        }
+
         // If it gets this far, return trwd and write to txt file
-        String filePath = "people.txt";
         String newPerson = personID + ", " + firstName + ", " + lastName + ", " + address + ", " + birthDate
                 + "\n";
         // Create new writer object
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true))) {
+        try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
             writer.write(newPerson);
-            System.out.println("Text appended successfully to " + filePath);
+            System.out.println("Text appended successfully to people.txt");
         } catch (IOException e) {
-            System.err.println("An error occurred: " + e.getMessage());
+            // Writing error, fail gracefully
+            return false;
         }
         return true;
     }
@@ -136,7 +187,13 @@ public class Person {
         // Condition 1: If a person is under 18 their address cannotn be changed
         // Get year from date
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-        LocalDate birthDate = LocalDate.parse(this.birthDate, formatter);
+        LocalDate birthDate;
+        try {
+            birthDate = LocalDate.parse(this.birthDate, formatter);
+        } catch (DateTimeParseException e) {
+            return false;  // invalid format -> fail update
+        }
+
         LocalDate today = LocalDate.now();
         int age = Period.between(birthDate, today).getYears();
 
@@ -213,10 +270,6 @@ public class Person {
     }
 
     public String addDemeritPoints(String offenseDateStr, int points){
-        //comndition 3 - If the person is under 21, the isSuspended variable should be set to true
-        //if the total demerit points within two years exceed 6.
-        // If the person is over 21, the isSuspended variable should be set to true
-        //if the total demerit points within two years exceed 12.
         /*
         Condition 1: The format of the date of the offense should follow the following format: DD-MM-YYYY. Example: 15-11-1990
         Condition 2: The demerit points must be a whole number between 1-6.
@@ -240,21 +293,24 @@ public class Person {
         if (points < 1 || points > 6) {
             return "Failed";
         }
-        // Add to in-memory map
-        if (demeritPoints == null) {
-            demeritPoints = new HashMap<>();
-        }
-        demeritPoints.put(offenseDate, points);
+
+        // Add points to map: list of points per date
+        List<Integer> pointsList = demeritPoints.getOrDefault(offenseDate, new ArrayList<>());
+        pointsList.add(points);
+        demeritPoints.put(offenseDate, pointsList);
+        System.out.println("DEBUG: Added " + points + " points on " + offenseDateStr);
+        System.out.println("DEBUG: Current points on this date: " + pointsList);
 
         //cond3: suspension checks
         LocalDate currentDate = LocalDate.now();
         LocalDate birthLocalDate;
         try {
             Date birth = format.parse(birthDate);
-            birthLocalDate = birth.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+            birthLocalDate = birth.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         } catch (ParseException e) {
-            return "Failed"; // Ensures rightb irthday format
+            return "Failed"; // invalid birthDate format
         }
+
 
         int age = currentDate.getYear() - birthLocalDate.getYear();
         if (currentDate.getDayOfYear() < birthLocalDate.getDayOfYear()) {
@@ -262,23 +318,20 @@ public class Person {
         }
 
         // Add to in-memory map
-        if (demeritPoints == null) {
-            demeritPoints = new HashMap<>();
-        }
-        demeritPoints.put(offenseDate, points);
-
-        // check demerPs in past 2 years
         int totalPointsInLast2Years = 0;
+        LocalDate cutoffDate = currentDate.minusYears(2);
+
         for (Date date : demeritPoints.keySet()) {
-            LocalDate offenseLocalDate = date.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
-            if (!offenseLocalDate.isBefore(currentDate.minusYears(2))) {
-                totalPointsInLast2Years += demeritPoints.get(date);
+            LocalDate offenseLocalDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            if (!offenseLocalDate.isBefore(cutoffDate)) {
+                for (int p : demeritPoints.get(date)) {
+                    totalPointsInLast2Years += p;
+                }
             }
         }
 
-        // Check suspension
-        if ((age < 21 && totalPointsInLast2Years > 6) ||
-                (age >= 21 && totalPointsInLast2Years > 12)) {
+        // Update suspension status
+        if((age < 21 && totalPointsInLast2Years > 6) || (age >= 21 && totalPointsInLast2Years > 12)) {
             isSuspended = true;
         }
 
