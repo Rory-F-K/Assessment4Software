@@ -155,7 +155,7 @@ class TestClass_UpdatePersonalDetails {
         assertTrue(updatedLines.contains("23@@@ABCDZ, Updated, Name, 456 New Address, 01-01-2000"));
     }
 
-        // Test case: Attempting to update a person not found in people.txt
+    // Test case: Attempting to update a person not found in people.txt
     @Test
     void testUpdatePersonalDetails_PersonNotFound() throws IOException {
         PersonManagement personManagement = new PersonManagement();
@@ -167,7 +167,8 @@ class TestClass_UpdatePersonalDetails {
         assertFalse(lines.stream().anyMatch(line -> line.contains("Ghost")));
     }
 
-    // Test case: Attempting to update with null values (should be ignored or raise no exception)
+    // Test case: Attempting to update with null values (should be ignored or raise
+    // no exception)
     @Test
     void testUpdatePersonalDetails_NullInputs() throws IOException {
         PersonManagement personManagement = new PersonManagement();
@@ -178,14 +179,13 @@ class TestClass_UpdatePersonalDetails {
         assertTrue(lines.contains("23@@@ABCDZ, Test, User, 123 Test St, 01-01-2000"));
     }
 
-        // Test case: Malformed line in people.txt should be skipped safely
+    // Test case: Malformed line in people.txt should be skipped safely
     @Test
     void testUpdatePersonalDetails_MalformedLine() throws IOException {
         // Write malformed data to people.txt manually
         Files.write(Paths.get("people.txt"), Arrays.asList(
-            "23@@@ABCDZ, Test, User, 123 Test St, 01-01-2000",
-            "MALFORMED LINE WITHOUT ENOUGH FIELDS"
-        ));
+                "23@@@ABCDZ, Test, User, 123 Test St, 01-01-2000",
+                "MALFORMED LINE WITHOUT ENOUGH FIELDS"));
 
         PersonManagement personManagement = new PersonManagement();
         personManagement.updatePersonalDetails("23@@@ABCDZ", "Fixed", "Name", "789 Proper Rd", "02-02-2002");
@@ -195,13 +195,13 @@ class TestClass_UpdatePersonalDetails {
         assertTrue(lines.contains("MALFORMED LINE WITHOUT ENOUGH FIELDS")); // should remain untouched
     }
 
-        // Test case: people.txt remains unchanged when no matching license number is found
+    // Test case: people.txt remains unchanged when no matching license number is
+    // found
     @Test
     void testUpdatePersonalDetails_NoUpdateWhenLicenseNotFound() throws IOException {
         // Prepare initial file content
         List<String> originalData = Arrays.asList(
-            "23@@@ABCDZ, Test, User, 123 Test St, 01-01-2000"
-        );
+                "23@@@ABCDZ, Test, User, 123 Test St, 01-01-2000");
         Files.write(Paths.get("people.txt"), originalData);
 
         PersonManagement personManagement = new PersonManagement();
@@ -210,6 +210,32 @@ class TestClass_UpdatePersonalDetails {
         // Read the file back and verify it remains unchanged
         List<String> resultLines = Files.readAllLines(Paths.get("people.txt"));
         assertEquals(originalData, resultLines);
+    }
+
+    // Test case: All matching license entries are updated (if intended behavior)
+    @Test
+    void testUpdatePersonalDetails_MultipleMatchingEntries() throws IOException {
+        // Set up people.txt with multiple records sharing the same license number
+        List<String> initialData = Arrays.asList(
+                "MULTI123, First, Entry, 1 Old Rd, 01-01-1990",
+                "MULTI123, Second, Entry, 2 Old Rd, 02-02-1991",
+                "UNIQUE456, Lone, User, 3 Normal St, 03-03-1992");
+        Files.write(Paths.get("people.txt"), initialData);
+
+        // Call the update method with matching license
+        PersonManagement personManagement = new PersonManagement();
+        personManagement.updatePersonalDetails("MULTI123", "Updated", "Name", "123 New Rd", "11-11-2011");
+
+        // Read the updated file
+        List<String> updatedLines = Files.readAllLines(Paths.get("people.txt"));
+
+        // Confirm both MULTI123 entries are updated
+        assertTrue(updatedLines.contains("MULTI123, Updated, Name, 123 New Rd, 11-11-2011"));
+        assertEquals(2, updatedLines.stream()
+                .filter(line -> line.contains("MULTI123") && line.contains("Updated")).count());
+
+        // Ensure the unique entry was not changed
+        assertTrue(updatedLines.contains("UNIQUE456, Lone, User, 3 Normal St, 03-03-1992"));
     }
 
 }
