@@ -194,6 +194,24 @@ class TestClass_UpdatePersonalDetails {
         assertTrue(lines.contains("23@@@ABCDZ, Fixed, Name, 789 Proper Rd, 02-02-2002"));
         assertTrue(lines.contains("MALFORMED LINE WITHOUT ENOUGH FIELDS")); // should remain untouched
     }
+
+        // Test case: people.txt remains unchanged when no matching license number is found
+    @Test
+    void testUpdatePersonalDetails_NoUpdateWhenLicenseNotFound() throws IOException {
+        // Prepare initial file content
+        List<String> originalData = Arrays.asList(
+            "23@@@ABCDZ, Test, User, 123 Test St, 01-01-2000"
+        );
+        Files.write(Paths.get("people.txt"), originalData);
+
+        PersonManagement personManagement = new PersonManagement();
+        personManagement.updatePersonalDetails("NON_EXISTENT_LICENSE", "Jane", "Doe", "999 Ghost Rd", "03-03-2003");
+
+        // Read the file back and verify it remains unchanged
+        List<String> resultLines = Files.readAllLines(Paths.get("people.txt"));
+        assertEquals(originalData, resultLines);
+    }
+
 }
 
 class addDemeritPoints {
