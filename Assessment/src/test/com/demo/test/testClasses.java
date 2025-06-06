@@ -178,7 +178,22 @@ class TestClass_UpdatePersonalDetails {
         assertTrue(lines.contains("23@@@ABCDZ, Test, User, 123 Test St, 01-01-2000"));
     }
 
-    
+        // Test case: Malformed line in people.txt should be skipped safely
+    @Test
+    void testUpdatePersonalDetails_MalformedLine() throws IOException {
+        // Write malformed data to people.txt manually
+        Files.write(Paths.get("people.txt"), Arrays.asList(
+            "23@@@ABCDZ, Test, User, 123 Test St, 01-01-2000",
+            "MALFORMED LINE WITHOUT ENOUGH FIELDS"
+        ));
+
+        PersonManagement personManagement = new PersonManagement();
+        personManagement.updatePersonalDetails("23@@@ABCDZ", "Fixed", "Name", "789 Proper Rd", "02-02-2002");
+
+        List<String> lines = Files.readAllLines(Paths.get("people.txt"));
+        assertTrue(lines.contains("23@@@ABCDZ, Fixed, Name, 789 Proper Rd, 02-02-2002"));
+        assertTrue(lines.contains("MALFORMED LINE WITHOUT ENOUGH FIELDS")); // should remain untouched
+    }
 }
 
 class addDemeritPoints {
