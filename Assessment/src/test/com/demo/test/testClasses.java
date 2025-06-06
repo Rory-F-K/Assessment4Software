@@ -137,6 +137,25 @@ class TestClass_AddPerson {
     }
 }
 
+class TestClass_UpdatePersonalDetails {
+
+    @BeforeEach
+    void resetPeopleFile() throws IOException {
+        List<String> lines = new ArrayList<>();
+        lines.add("23@@@ABCDZ, Test, User, 123 Test St, 01-01-2000");
+        Files.write(Paths.get("people.txt"), lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    @Test
+    void testUpdatePersonalDetails_ValidUpdate() throws IOException {
+        PersonManagement personManagement = new PersonManagement();
+        personManagement.updatePersonalDetails("23@@@ABCDZ", "Updated", "Name", "456 New Address", "01-01-2000");
+
+        List<String> updatedLines = Files.readAllLines(Paths.get("people.txt"));
+        assertTrue(updatedLines.contains("23@@@ABCDZ, Updated, Name, 456 New Address, 01-01-2000"));
+    }
+}
+
 class addDemeritPoints {
     @BeforeEach
     void setup() throws IOException {
