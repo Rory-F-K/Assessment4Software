@@ -154,6 +154,31 @@ class TestClass_UpdatePersonalDetails {
         List<String> updatedLines = Files.readAllLines(Paths.get("people.txt"));
         assertTrue(updatedLines.contains("23@@@ABCDZ, Updated, Name, 456 New Address, 01-01-2000"));
     }
+
+        // Test case: Attempting to update a person not found in people.txt
+    @Test
+    void testUpdatePersonalDetails_PersonNotFound() throws IOException {
+        PersonManagement personManagement = new PersonManagement();
+        personManagement.updatePersonalDetails("99@@@XXXXZ", "Ghost", "User", "Nowhere Street", "01-01-1990");
+
+        List<String> lines = Files.readAllLines(Paths.get("people.txt"));
+        // The original line should remain unchanged
+        assertTrue(lines.contains("23@@@ABCDZ, Test, User, 123 Test St, 01-01-2000"));
+        assertFalse(lines.stream().anyMatch(line -> line.contains("Ghost")));
+    }
+
+    // Test case: Attempting to update with null values (should be ignored or raise no exception)
+    @Test
+    void testUpdatePersonalDetails_NullInputs() throws IOException {
+        PersonManagement personManagement = new PersonManagement();
+        personManagement.updatePersonalDetails("23@@@ABCDZ", null, null, null, null);
+
+        List<String> lines = Files.readAllLines(Paths.get("people.txt"));
+        // Ensure the line remains unchanged due to null inputs
+        assertTrue(lines.contains("23@@@ABCDZ, Test, User, 123 Test St, 01-01-2000"));
+    }
+
+    
 }
 
 class addDemeritPoints {
