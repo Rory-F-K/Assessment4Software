@@ -253,6 +253,26 @@ class TestClass_UpdatePersonalDetails {
         assertEquals(0, resultLines.size());
     }
 
+        // Test case: people.txt file does not exist
+    @Test
+    void testUpdatePersonalDetails_FileDoesNotExist() throws IOException {
+        // Ensure the file does not exist
+        Path peopleFile = Paths.get("people.txt");
+        if (Files.exists(peopleFile)) {
+            Files.delete(peopleFile);
+        }
+
+        // Call the update function (it should create the file or fail gracefully)
+        PersonManagement personManagement = new PersonManagement();
+        personManagement.updatePersonalDetails("NOFILE123", "First", "Last", "Lost St", "10-10-2010");
+
+        // Check that file was created and contains new data
+        assertTrue(Files.exists(peopleFile));
+        List<String> resultLines = Files.readAllLines(peopleFile);
+        assertEquals(1, resultLines.size());
+        assertEquals("NOFILE123, First, Last, Lost St, 10-10-2010", resultLines.get(0));
+    }
+
     
 
 }
