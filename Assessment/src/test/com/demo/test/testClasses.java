@@ -238,6 +238,23 @@ class TestClass_UpdatePersonalDetails {
         assertTrue(updatedLines.contains("UNIQUE456, Lone, User, 3 Normal St, 03-03-1992"));
     }
 
+        // Test case: Attempting to update when people.txt is empty
+    @Test
+    void testUpdatePersonalDetails_EmptyFile() throws IOException {
+        // Create an empty people.txt file
+        Files.write(Paths.get("people.txt"), new ArrayList<>());
+
+        // Call update method
+        PersonManagement personManagement = new PersonManagement();
+        personManagement.updatePersonalDetails("EMPTY123", "Test", "Case", "Nowhere", "01-01-1999");
+
+        // File should still be empty — no changes to be made
+        List<String> resultLines = Files.readAllLines(Paths.get("people.txt"));
+        assertEquals(0, resultLines.size());
+    }
+
+    
+
 }
 
 class addDemeritPoints {
